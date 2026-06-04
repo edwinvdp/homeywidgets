@@ -13,18 +13,18 @@
   html, body { width: 100%; max-width: 100%; overflow: hidden; }
   body { background: #121212; font-family: 'DM Sans', sans-serif; color: #fff; }
 
-  /* ── Widget shell ─────────────────────────────────────────── */
+
   .widget {
     width: 100%; max-width: 100%;
     height: 175px;
-    padding: 10px 10px 10px 16px; /* extra links voor live-dot */
+    padding: 10px 10px 10px 16px;
     border-radius: 20px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.08);
     position: relative; overflow: hidden;
   }
 
-  /* Background photo layers */
+
   .bg-layer {
     position: absolute; inset: 0;
     background-size: cover; background-position: center;
@@ -44,14 +44,13 @@
   }
 
 
-  /* ── Widget inner layout ──────────────────────────────────── */
   .widget-inner {
     position: relative; z-index: 2;
     display: flex; flex-direction: column;
     height: 100%;
   }
 
-  /* ── Header row: date chip in flow ────────────────────────── */
+
   .widget-header {
     display: flex; justify-content: flex-end;
     margin-bottom: 6px;
@@ -66,7 +65,7 @@
     letter-spacing: 0.04em; white-space: nowrap;
   }
 
-  /* ── Match list ────────────────────────────────────────────── */
+
   .match-list {
     flex: 1;
     display: flex; flex-direction: column;
@@ -82,7 +81,7 @@
   }
   .match-list.page-in { animation: pageIn 0.36s ease forwards; }
 
-  /* ── Page dots ─────────────────────────────────────────────── */
+
   .page-dots {
     display: flex; justify-content: center; gap: 5px;
     height: 14px; align-items: center; margin-top: 4px;
@@ -96,8 +95,7 @@
     background: rgba(255,255,255,0.85); transform: scale(1.4);
   }
 
-  /* ── Match row: [tijd+stad | div | namen] ─────────────────────
-   * Geen aparte groep- of stadskolom; stad staat onder het tijd.  */
+
   .match-row {
     display: grid;
     grid-template-columns: 40px 1px 1fr;
@@ -109,7 +107,7 @@
   }
   .match-row:last-child { border-bottom: none; }
 
-  /* Live-dot links in de padding */
+
   .live-dot {
     position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
     width: 5px; height: 5px; border-radius: 50%;
@@ -117,7 +115,7 @@
   }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.1} }
 
-  /* Linker kolom: tijd + stad in twee regels */
+
   .col-time-city {
     display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   }
@@ -131,13 +129,13 @@
     font-size: 9.5px; color: rgba(255,255,255,0.45); white-space: nowrap;
   }
 
-  /* Scheidingslijn */
+
   .row-divider {
     width: 1px; height: 22px;
     background: rgba(255,255,255,0.15); justify-self: center;
   }
 
-  /* Namen: [vlag][naam] – [naam][vlag] */
+
   .row-teams {
     display: flex; align-items: center; gap: 5px; min-width: 0;
   }
@@ -162,20 +160,20 @@
     text-shadow: 0 1px 6px rgba(0,0,0,0.7);
   }
 
-  /* Scheiding tussen teams */
+
   .score-sep {
     flex-shrink: 0; min-width: 22px; text-align: center;
     font-family: 'Outfit', sans-serif; font-weight: 300;
     font-size: 15px; color: rgba(255,255,255,0.40);
   }
 
-  /* No-matches fallback */
+
   .no-match-row {
     padding: 10px 0;
     font-size: 11px; color: rgba(255,255,255,0.55);
   }
 
-  /* Glow wrap */
+
   .glow-wrap { border-radius: 20px; }
 </style>
 </head>
@@ -199,44 +197,30 @@
 <script>
 (function () {
 
-/* ── URL parameters ──────────────────────────────────────────── */
 const PARAMS    = new URLSearchParams(window.location.search);
 const LANG      = ['nl','en','de','fr'].includes(PARAMS.get('lang')) ? PARAMS.get('lang') : 'nl';
-const DATE_SIM  = PARAMS.get('date') || null;   // e.g. "2026-06-14" or "2026-06-14T03:00"
+const DATE_SIM  = PARAMS.get('date') || null;
 
-/* Tijdzone — IANA naam, bijv. "America/New_York", "Asia/Tokyo"
-   Valt terug op Amsterdam als de waarde ongeldig is.            */
 const TZ = (() => {
   const raw = PARAMS.get('tz') || 'Europe/Amsterdam';
   try { Intl.DateTimeFormat(undefined, { timeZone: raw }); return raw; }
   catch (_) { return 'Europe/Amsterdam'; }
 })();
 
-/* ── Config ─────────────────────────────────────────────────── */
 const FLAG_BASE = 'https://flagcdn.com/w40/';
 
-
 const FOOTBALL_PHOTOS = [
-  // Adidas bal in leeg stadion — bevestigd goed
   'https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg?auto=compress&cs=tinysrgb&w=800',
-  // Vol Camp Nou, Barcelona
   'https://images.pexels.com/photos/13069970/pexels-photo-13069970.jpeg?auto=compress&cs=tinysrgb&w=800',
-  // Vol stadion met spelers op het veld, Barcelona
   'https://images.pexels.com/photos/270085/pexels-photo-270085.jpeg?auto=compress&cs=tinysrgb&w=800',
-  // Uitgelaten publiek in vol stadion
   'https://images.pexels.com/photos/17071576/pexels-photo-17071576.jpeg?auto=compress&cs=tinysrgb&w=800',
-  // Vlaggen zwaaiende fans, vol stadion (Japan)
   'https://images.pexels.com/photos/31744929/pexels-photo-31744929.jpeg?auto=compress&cs=tinysrgb&w=800',
-  // Ingepakt stadion, tribunes en veld zichtbaar
   'https://images.pexels.com/photos/12537022/pexels-photo-12537022.jpeg?auto=compress&cs=tinysrgb&w=800',
 ];
 
-/* ── Translations ────────────────────────────────────────────── *
- * Team names in SCHEDULE are Dutch. Each language maps Dutch →  *
- * translated. Untranslated names (e.g. Mexico) stay as-is.      */
 const TR = {
   nl: {
-    teams: {},   // Dutch is the base — no mapping needed
+    teams: {},
     round: { '1/16 finale':'1/16', 'Kwartfinale':'KW', 'Halve finale':'HF', '3e plaats':'3e pl.', 'Finale':'Finale' },
     noToday:  'Geen wedstrijden vandaag · eerstvolgende hieronder',
     ended:    'WK 2026 is afgelopen',
@@ -319,13 +303,11 @@ function translateTeam(nl) {
 }
 
 function shortRound(round) {
-  // Groepsfase: toon alleen de letter ("A"…"L")
   const grp = round.match(/Gr\.\s*([A-L])/i);
   if (grp) return grp[1];
   return t.round[round] || round;
 }
 
-/* ── Flag codes (keyed on Dutch team name = schedule base) ───── */
 const FLAG_CODES = {
   'Mexico':'mx','Zuid-Afrika':'za','Zuid-Korea':'kr','Tsjechië':'cz',
   'Canada':'ca','Bosnië-Herzegovina':'ba','VS':'us','Paraguay':'py',
@@ -341,8 +323,6 @@ const FLAG_CODES = {
   'Ghana':'gh','Panama':'pa','Oezbekistan':'uz','Colombia':'co',
 };
 
-/* ── Schedule (NL/Amsterdam time) ───────────────────────────────
-   [matchNum, date, time, team1, team2, round, city]            */
 const SCHEDULE = [
   [ 1,'2026-06-11','21:00','Mexico','Zuid-Afrika','Gr. A','Mexico City'],
   [ 2,'2026-06-12','04:00','Zuid-Korea','Tsjechië','Gr. A','Guadalajara'],
@@ -450,7 +430,6 @@ const SCHEDULE = [
  [104,'2026-07-19','21:00','W101','W102','Finale','New York/NJ'],
 ];
 
-/* ── DOM refs ────────────────────────────────────────────────── */
 const matchListEl = document.getElementById('matchList');
 const dateChipEl  = document.getElementById('dateChip');
 const pageDotsEl  = document.getElementById('pageDots');
@@ -461,14 +440,12 @@ const PAGE_SIZE = 3;
 
 let currentBg      = 'A';
 let photoIdx       = 0;
-let allMatches     = [];   // volledige lijst van huidige speeldag
+let allMatches     = [];
 let currentPage    = 0;
 let pageTimer      = null;
 
-/* ── NL time helpers ─────────────────────────────────────────── */
 function getNL() {
   if (DATE_SIM) {
-    // Support "2026-06-14" (defaults to 15:00) or "2026-06-14T03:00"
     if (DATE_SIM.includes('T')) {
       const [dp, tp] = DATE_SIM.split('T');
       const [y,m,d]  = dp.split('-').map(Number);
@@ -476,7 +453,7 @@ function getNL() {
       return new Date(y, m-1, d, h, mi, 0);
     } else {
       const [y,m,d] = DATE_SIM.split('-').map(Number);
-      return new Date(y, m-1, d, 15, 0, 0);   // default: 15:00
+      return new Date(y, m-1, d, 15, 0, 0);
     }
   }
   return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' }));
@@ -487,16 +464,11 @@ function toDateStr(d) {
 }
 
 function shiftDate(dateStr, days) {
-  // Shift by N days without timezone issues
   const [y,m,d] = dateStr.split('-').map(Number);
   const dt = new Date(y, m-1, d+days);
   return toDateStr(dt);
 }
 
-/* ── Speeldag window: 12:00 vandaag → 12:00 morgen ─────────────
-   Wedstrijden van 21:00 én de nacht erna (bijv. 04:00) vallen
-   allebei onder dezelfde speeldag.
-   Als het nu vóór 12:00 NL is, geldt nog de vorige speeldag.  */
 function getWindowStart() {
   const nl = getNL();
   if (nl.getHours() < 12) nl.setDate(nl.getDate() - 1);
@@ -504,15 +476,14 @@ function getWindowStart() {
 }
 
 function getWindowMatches() {
-  const start = getWindowStart();   // bijv. "2026-06-11"
-  const end   = shiftDate(start, 1); // bijv. "2026-06-12"
+  const start = getWindowStart();
+  const end   = shiftDate(start, 1);
   return SCHEDULE
     .filter(([, date, time]) =>
       (date === start && time >= '12:00') ||
       (date === end   && time <  '12:00')
     )
     .sort((a, b) => {
-      // Zelfde dag >= 12:00 eerst, daarna nacht van volgende dag
       const aIsEnd = a[1] === end;
       const bIsEnd = b[1] === end;
       if (aIsEnd !== bIsEnd) return aIsEnd ? 1 : -1;
@@ -520,7 +491,6 @@ function getWindowMatches() {
     });
 }
 
-/* ── Live check ──────────────────────────────────────────────── */
 function isLive(date, time) {
   const nl  = getNL();
   const [y,m,d] = date.split('-').map(Number);
@@ -530,7 +500,6 @@ function isLive(date, time) {
   return diff >= 0 && diff < 110;
 }
 
-/* ── Date formatting ─────────────────────────────────────────── */
 function formatChipDate(dateStr) {
   const [y,m,d] = dateStr.split('-').map(Number);
   return new Date(y, m-1, d).toLocaleDateString(t.locale, {
@@ -538,9 +507,7 @@ function formatChipDate(dateStr) {
   });
 }
 
-/* ── UTC / tijdzone-conversie ────────────────────────────────────
-   Alle schema-tijden zijn NL (CEST = UTC+2) gedurende het WK.   */
-const NL_UTC_H = 2;   // CEST offset
+const NL_UTC_H = 2;
 
 function matchToUTC(nlDate, nlTime) {
   const [y,m,d] = nlDate.split('-').map(Number);
@@ -548,7 +515,6 @@ function matchToUTC(nlDate, nlTime) {
   return Date.UTC(y, m-1, d, h - NL_UTC_H, mi);
 }
 
-// Geeft de weergave-tijd terug in de gekozen TZ ("HH:MM")
 function displayTime(nlDate, nlTime) {
   if (TZ === 'Europe/Amsterdam') return nlTime;
   const utcMs = matchToUTC(nlDate, nlTime);
@@ -557,9 +523,6 @@ function displayTime(nlDate, nlTime) {
   }).format(new Date(utcMs)).replace(/^24:/, '00:');
 }
 
-
-
-/* ── Background photo ────────────────────────────────────────── */
 function swapPhoto(url) {
   const inn = currentBg === 'A' ? bgB : bgA;
   const out = currentBg === 'A' ? bgA : bgB;
@@ -578,7 +541,6 @@ function nextPhoto() {
   photoIdx++;
 }
 
-/* ── Build a flag element ────────────────────────────────────── */
 function makeFlagWrap(teamName) {
   const wrap = document.createElement('div');
   wrap.className = 'flag-wrap';
@@ -594,7 +556,6 @@ function makeFlagWrap(teamName) {
   return wrap;
 }
 
-/* ── Stadsafkortingen (3-4 tekens, past in 28px kolom) ───────── */
 const CITY_SHORT = {
   'Mexico City':'MEX','Guadalajara':'GDL','Los Angeles':'LAX',
   'San Francisco':'SFO','New York/NJ':'NYC','Vancouver':'VAN',
@@ -603,7 +564,6 @@ const CITY_SHORT = {
   'Kansas City':'K.C.','Monterrey':'MTY',
 };
 
-/* ── Build one match row ─────────────────────────────────────── */
 function makeRow(match) {
   const [num, date, time, t1, t2, round, city] = match;
   const live = isLive(date, time);
@@ -611,14 +571,12 @@ function makeRow(match) {
   const row = document.createElement('div');
   row.className = 'match-row' + (live ? ' live' : '');
 
-  // Live-dot: absoluut gepositioneerd, buiten het grid
   if (live) {
     const dot = document.createElement('div');
     dot.className = 'live-dot';
     row.appendChild(dot);
   }
 
-  // Col 1: tijd + stad (tweeregelig blok)
   const timeCityEl = document.createElement('div');
   timeCityEl.className = 'col-time-city';
   const timeEl = document.createElement('div');
@@ -631,12 +589,10 @@ function makeRow(match) {
   timeCityEl.appendChild(cityEl);
   row.appendChild(timeCityEl);
 
-  // Col 2: vertical divider
   const divEl = document.createElement('div');
   divEl.className = 'row-divider';
   row.appendChild(divEl);
 
-  // Col 5: teams
   const teamsEl = document.createElement('div');
   teamsEl.className = 'row-teams';
 
@@ -647,7 +603,6 @@ function makeRow(match) {
   n1.className = 'team-name'; n1.textContent = translateTeam(t1);
   leftEl.appendChild(n1);
 
-  // Separator
   const vsEl = document.createElement('div');
   vsEl.className = 'score-sep';
   vsEl.textContent = '–';
@@ -664,12 +619,9 @@ function makeRow(match) {
   teamsEl.appendChild(rightEl);
   row.appendChild(teamsEl);
 
-
   return row;
 }
 
-/* ── Render alleen de matchlijst (zonder foto-wissel) ────────── */
-/* ── Toon één pagina van de matchlijst ───────────────────────── */
 function renderPage(animate) {
   const totalPages = Math.ceil(allMatches.length / PAGE_SIZE);
   const page = allMatches.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
@@ -677,7 +629,6 @@ function renderPage(animate) {
   const paint = () => {
     matchListEl.innerHTML = '';
     page.forEach(m => matchListEl.appendChild(makeRow(m)));
-    // Dots
     pageDotsEl.innerHTML = '';
     if (totalPages > 1) {
       for (let i = 0; i < totalPages; i++) {
@@ -763,16 +714,13 @@ function renderList() {
   startPaging();
 }
 
-/* ── Volledige render (incl. achtergrond wisselen) ───────────── */
 function render() {
   nextPhoto();
   renderList();
 }
 
 render();
-// Achtergrond langzaam wisselen
 setInterval(nextPhoto, 20000);
-// Wedstrijdlijst elke 30 minuten verversen
 if (!DATE_SIM) setInterval(render, 30 * 60 * 1000);
 
 })();
