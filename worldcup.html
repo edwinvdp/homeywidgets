@@ -200,6 +200,7 @@
 const PARAMS    = new URLSearchParams(window.location.search);
 const LANG      = ['nl','en','de','fr'].includes(PARAMS.get('lang')) ? PARAMS.get('lang') : 'nl';
 const DATE_SIM  = PARAMS.get('date') || null;
+const NO_BG     = PARAMS.get('nobg') === 'true';
 
 const TZ = (() => {
   const raw = PARAMS.get('tz') || 'Europe/Amsterdam';
@@ -537,6 +538,7 @@ function swapPhoto(url) {
 }
 
 function nextPhoto() {
+  if (NO_BG) return;
   swapPhoto(FOOTBALL_PHOTOS[photoIdx % FOOTBALL_PHOTOS.length]);
   photoIdx++;
 }
