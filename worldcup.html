@@ -472,7 +472,7 @@ function shiftDate(dateStr, days) {
 
 function getWindowStart() {
   const nl = getNL();
-  if (nl.getHours() < 12) nl.setDate(nl.getDate() - 1);
+  if (nl.getHours() < 7) nl.setDate(nl.getDate() - 1);
   return toDateStr(nl);
 }
 
@@ -481,8 +481,8 @@ function getWindowMatches() {
   const end   = shiftDate(start, 1);
   return SCHEDULE
     .filter(([, date, time]) =>
-      (date === start && time >= '12:00') ||
-      (date === end   && time <  '12:00')
+      (date === start && time >= '07:00') ||
+      (date === end   && time <  '07:00')
     )
     .sort((a, b) => {
       const aIsEnd = a[1] === end;
