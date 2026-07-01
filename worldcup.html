@@ -202,6 +202,8 @@ const LANG      = ['nl','en','de','fr'].includes(PARAMS.get('lang')) ? PARAMS.ge
 const DATE_SIM  = PARAMS.get('date') || null;
 const NO_BG     = PARAMS.get('nobg') === 'true';
 
+const SCHEMA_GIST_URL = 'https://gist.githubusercontent.com/edwinvdp/2b4aee6d76ccba19d259c575a34f8e9e/raw/wk2026schema.json';
+
 const TZ = (() => {
   const raw = PARAMS.get('tz') || 'Europe/Amsterdam';
   try { Intl.DateTimeFormat(undefined, { timeZone: raw }); return raw; }
@@ -328,7 +330,7 @@ const FLAG_CODES = {
   'DR Congo':'cd',
 };
 
-const SCHEDULE = [
+let SCHEDULE = [
   [ 1,'2026-06-11','21:00','Mexico','Zuid-Afrika','Gr. A','Mexico City'],
   [ 2,'2026-06-12','04:00','Zuid-Korea','Tsjechië','Gr. A','Guadalajara'],
   [ 3,'2026-06-12','21:00','Canada','Bosnië-Herzegovina','Gr. B','Toronto'],
@@ -725,9 +727,22 @@ function render() {
   renderList();
 }
 
-render();
-setInterval(nextPhoto, 20000);
-if (!DATE_SIM) setInterval(render, 30 * 60 * 1000);
+async function init() {
+  try {
+    const resp = await fetch(SCHEMA_GIST_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (Array.isArray(data?.schedule) && data.schedule.length) {
+        SCHEDULE = data.schedule;
+      }
+    }
+  } catch (_) {}
+  render();
+  setInterval(nextPhoto, 20000);
+  if (!DATE_SIM) setInterval(render, 30 * 60 * 1000);
+}
+
+init();
 
 })();
 </script>
